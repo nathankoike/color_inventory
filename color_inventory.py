@@ -48,50 +48,37 @@ def similar(color1, color2, threshold):
     # Determine if the average similarity is above the threshold
     return avg_diff < threshold and max(diffs) < threshold
 
-def main():
-    fname = sys.argv[1].split('.')
-
-    im = Image.open('.'.join(fname))
-    pix = im.load()
-
-    # Set the similarity threshold
-    threshold = float(sys.argv[2]) if (len(sys.argv) > 2) else 0.5
-
-    # Set the step
-    step = int(sys.argv[3]) if (len(sys.argv) > 3) else 2
-
+# Get all the colors in the image
+def get_colors(x, y, step, threshold, img):
     colors = []
 
     # Get all the "unique" colors in the image
-    for y in range(im.size[1]):
+    for r in range(y):
         # Skip every other row
-        if not (y % step):
+        if not (r % step):
             # Completion status
-            print(str((y / im.size[1]) * 100) + "%")
+            print(str((r / y) * 100) + "%")
 
-            for x in range(im.size[0]):
+            for c in range(x):
                 # Skip every other column
-                if not (x % step):
+                if not (c % step):
                     found = False
 
                     # Check if we have already found a similar color
                     for i in range(len(colors)):
-                        if (similar(colors[i][0], pix[x, y], threshold)):
+                        if (similar(colors[i][0], img[c, r], threshold)):
                             found = True
                             colors[i] = [colors[i][0], colors[i][1] + 1]
                             break
 
                     # If not, we have a unique color and we should add it
                     if not found:
-                        colors.append([pix[x,y], 1])
+                        colors.append([img[c, r], 1])
 
-    # Quadruple the occurrences of each color to make up for skipped pixels
-    for i in range(len(colors)):
-        colors[i] = [colors[i][0], colors[i][1] * (step ** 2)]
+    return colors
 
-    # Sort the colors by frequency
-    colors = sort_colors(colors)
-
+# Generate a new image with the colors
+def generate_inventory(im, pix, colors, fname):
     # Generate a new image with the relative amounts of the colors
     for y in range(im.size[1]):
         for x in range(im.size[0]):
@@ -102,9 +89,39 @@ def main():
                 colors = colors[1:]
 
     # Save the new image
-    im.save(fname[0] + "_output." + fname[-1])
+    im.save(fname[0] + "_inventory." + fname[-1])
 
-    print("Done!")
+def main():
+    # Open the settings file
+    with open("settings.txt", "r") as file:
+
+        fname = sys.argv[1].split('.')
+
+        im = Image.open('.'.join(fname))
+        pix = im.load()
+
+        # Set the similarity threshold
+        threshold = float(sys.argv[2]) if (len(sys.argv) > 2) else 0.5
+
+        # Set the step
+        step = int(sys.argv[3]) if (len(sys.argv) > 3) else 2
+
+        # Get all the colors in the image
+        colors = get_colors(im.size[0], im.size[1], step, threshold, pix)
+
+        # Adjust color occurrence numbers to account for step
+        for i in range(len(colors)):
+            colors[i] = [colors[i][0], colors[i][1] * (step ** 2)]
+
+        # Sort the colors by frequency
+        colors = sort_colors(colors)
+
+        # Generate a new image with the colors as an inventory
+        generate_inventory(im, pix, colors, fname)
+
+        print("Done!")
+
+        file.close()
 
 if __name__ == "__main__":
     main()

@@ -1,0 +1,3 @@
+file=test2.jpg
+threshold=0.2
+step=2
