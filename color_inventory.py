@@ -94,17 +94,32 @@ def generate_inventory(im, pix, colors, fname):
 def main():
     # Open the settings file
     with open("settings.txt", "r") as file:
+        fname = "" # The image file to open
+        threshold = 0.5 # The similarity threshold
+        step = 2 # The x and y step
 
-        fname = sys.argv[1].split('.')
+        # The contents of the file
+        settings = file.read().split('\n')
+
+        # For every setting in the file
+        for setting in settings:
+            if (len(setting)):
+                [option, value] = [e.strip() for e in setting.split('=')]
+
+                # Set the settings
+                if option == "file":
+                    fname = value.split('.') # The split is for later
+                if option == "threshold":
+                    threshold = float(value)
+                if option == "step":
+                    step = int(value)
+
+        if not len(fname):
+            print("Please provide a filename")
+            return
 
         im = Image.open('.'.join(fname))
         pix = im.load()
-
-        # Set the similarity threshold
-        threshold = float(sys.argv[2]) if (len(sys.argv) > 2) else 0.5
-
-        # Set the step
-        step = int(sys.argv[3]) if (len(sys.argv) > 3) else 2
 
         # Get all the colors in the image
         colors = get_colors(im.size[0], im.size[1], step, threshold, pix)
