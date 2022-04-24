@@ -107,18 +107,27 @@ def main():
                 [option, value] = [e.strip() for e in setting.split('=')]
 
                 # Set the settings
-                if option == "file":
+                if (option == "file" or option == "fname") and fname == "":
                     fname = value.split('.') # The split is for later
                 if option == "threshold":
                     threshold = float(value)
                 if option == "step":
                     step = int(value)
 
+        # Check that we have a filename
         if not len(fname):
             print("Please provide a filename")
             return
 
-        im = Image.open('.'.join(fname))
+        # Try to open the image
+        try:
+            im = Image.open('.'.join(fname))
+        except:
+            print("Please provide a valid filename")
+            file.close()
+            return
+
+        # Get all the pixels in the image
         pix = im.load()
 
         # Get all the colors in the image
@@ -134,6 +143,7 @@ def main():
         # Generate a new image with the colors as an inventory
         generate_inventory(im, pix, colors, fname)
 
+        # Print a nice finishing message
         print("Done!")
 
         file.close()
